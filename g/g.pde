@@ -4,6 +4,9 @@ ArrayList<Enemy> enemyList;
 Player p;
 Boundary b;
 
+float lastTimeEnemyAdded;
+float enemyAdditionInterval;
+
 void setup() {
   size(400, 600);
   background(bgColor);
@@ -15,25 +18,36 @@ void setup() {
   initLeftBoundary();
   initPlayer();
   initEnemies();
+
 }
 
 void initPlayer() {
-  p = new Player(width / 2.0, height * 0.90, 20, 4, b);
+  float pSize = 20;
+  float pSpeed = 4;
+  p = new Player(b.getEndX() / 2.0 - (pSize / 2.0), b.getEndY() * 0.90, pSize, pSpeed, b);
 }
 
 void initEnemies() {
+  enemyAdditionInterval = 5; //seconds
+  addEnemy();
   addEnemy();
   addEnemy();
 }
 
 void addEnemy() {
-  float enemyRadius = 5;
-  enemyList.add(new Enemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY()), enemyRadius));
+  float enemyScreenRatio = 0.00015;
+  float enemyRadius = (b.getEndX() * b.getEndY()) * enemyScreenRatio;
+  float enemySpeed = int(round(random(1, 2)));
+
+  print((b.getEndX() * b.getEndY()) * enemyScreenRatio);
+
+  enemyList.add(new Enemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY()), enemyRadius, enemySpeed, b));
+  lastTimeEnemyAdded = millis();
 }
 
 void initLeftBoundary() {
   float lBoundaryStartX = 0;
-  float lBoundaryEndX = width;
+  float lBoundaryEndX = width / 2.0;
   float lBoundaryStartY = 0;
   float lBoundaryEndY = height;
   b = new Boundary(lBoundaryStartX, lBoundaryEndX, lBoundaryStartY, lBoundaryEndY);
@@ -46,8 +60,10 @@ void draw() {
   handlePlayerInput();
   drawPlayer();
 
+  checkToAddMoreEnemies();
   updateEnemiesPos();
   drawEnemies();
+//  print(PVector.random2D() + "\n");
 }
 
 void keyPressed() {
@@ -94,25 +110,17 @@ void handlePlayerInput() {
   }
 }
 
+void checkToAddMoreEnemies() {
+  if ((millis() - lastTimeEnemyAdded) / 1000 >= enemyAdditionInterval)  {
+    addEnemy();
+  }
+}
+
+
 void updateEnemiesPos() {
-  float xInc, yInc;
-
+  Enemy e;
   for(int i = 0; i < enemyList.size(); i++) {
-    Enemy e = enemyList.get(i);
-    if (p.getXpos() > e.getXpos()) {
-      xInc = 1;
-    }
-    else {
-      xInc = -1;
-    }
-
-    if (p.getYpos() > e.getYpos()) {
-      yInc = 1;
-    }
-    else {
-      yInc = -1;
-    }
-
-    enemyList.get(i).updatePos(e.getXpos() + xInc, e.getYpos() + yInc);
+    e = enemyList.get(i);
+    e.updatePos(e.getXpos() + e.getSpeedX(), e.getYpos() + e.getSpeedY());
   }
 }

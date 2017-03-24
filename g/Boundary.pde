@@ -14,13 +14,13 @@ class Boundary {
         strokeWeight(outlineThickness);
         stroke(outlineColor);
 
-        line(startX, startY, endX, startY);
-        line(startX, startY, startX, endY);
+        line(startX, startY, endX, startY); // top
+        line(startX, startY, startX, endY); // left
 
-        line(endX, startY, endX, endY);
-        line(endX, endY, startY, endY);
+        line(endX, startY, endX, endY); // bottom
+        line(endX, endY, startY, endY); // right
 
-        strokeWeight(1);
+        strokeWeight(1); //reset stroke thickness
     }
 
     int getThickness() {
