@@ -79,11 +79,7 @@ void keyReleased() {
 }
 
 void drawPlayer() {
-  color playerOutline = color(0, 0, 0);
-  color playerColor = color(0, 90, 45);
-  stroke(playerOutline);
-  fill(playerColor);
-  rect(p.getXpos(), p.getYpos(), p.getSize(),  p.getSize());
+  p.display();
 }
 
 void drawEnemies() {

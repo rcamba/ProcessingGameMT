@@ -1,7 +1,7 @@
 class Enemy {
   float xPos, yPos, radius, speedX, speedY;
-  color outlineColor = color(0, 0, 0);
-  color fillColor = color(0, 0, 50);
+  color outlineColor = color(150, 0, 150);
+  color fillColor = color(0, 0, 50, 50);
   Boundary b;
 
   Enemy(float xPos, float yPos, float radius, float speed, Boundary b) {

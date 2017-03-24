@@ -1,5 +1,7 @@
 class Player {
   float xPos, yPos, size, speed;
+  color playerOutline = color(10, 170, 125);
+  color playerColor = color(130, 260, 230, 150);
   Boundary b;
 
   Player(float pXpos, float pYpos, float pSize, float pSpeed, Boundary b) {
@@ -36,6 +38,13 @@ class Player {
     else if (yPos < b.getStartY()) {
         yPos = b.getStartY() + b.getThickness() - 1;
     }
+  }
+
+  void display() {
+      stroke(playerOutline);
+      fill(playerColor);
+      rectMode(CENTER);
+      rect(xPos, yPos, size,  size);
   }
 
   float getSize() {
