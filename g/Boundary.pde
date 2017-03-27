@@ -42,4 +42,12 @@ class Boundary {
     float getEndY() {
         return endY;
     }
+
+    float getWidth() {
+      return endX - startX;
+    }
+
+    float getHeight() {
+      return endY - startY;
+    }
 }

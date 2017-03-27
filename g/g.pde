@@ -23,7 +23,7 @@ void setup() {
 
 void initPlayer() {
   float pSize = 20;
-  float pSpeed = 4;
+  float pSpeed = 4; // low speed causes boundary jutter/seizure like movement
   p = new Player(b.getEndX() / 2.0 - (pSize / 2.0), b.getEndY() * 0.90, pSize, pSpeed, b);
 }
 
@@ -38,8 +38,6 @@ void addEnemy() {
   float enemyScreenRatio = 0.00015;
   float enemyRadius = (b.getEndX() * b.getEndY()) * enemyScreenRatio;
   float enemySpeed = int(round(random(1, 2)));
-
-  print((b.getEndX() * b.getEndY()) * enemyScreenRatio);
 
   enemyList.add(new Enemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY()), enemyRadius, enemySpeed, b));
   lastTimeEnemyAdded = millis();
@@ -63,7 +61,41 @@ void draw() {
   checkToAddMoreEnemies();
   updateEnemiesPos();
   drawEnemies();
-//  print(PVector.random2D() + "\n");
+
+  checkPlayerEnemyCollision();
+
+}
+
+boolean pCollideE(Player p, Enemy e) {
+  float distX = abs(e.getXpos() - p.getXpos());
+  float distY = abs(e.getYpos() - p.getYpos());
+
+  if (distX > (p.getSize() / 2.0) + (e.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
+  if (distY > (p.getSize() / 2.0) + (e.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
+
+  if (distX <= (p.getSize() / 2.0)) {
+      return true;
+    }
+    if (distY <= (p.getSize() / 2.0)) {
+      return true;
+    }
+
+  float dx = distX - (p.getSize() / 2.0);
+  float dy = distY - (p.getSize() / 2.0);
+
+  return ((dx * dx) + (dy * dy)) <= (e.getSize() / 2.0) * (e.getSize() / 2.0);
+}
+
+void checkPlayerEnemyCollision() {
+  Enemy e;
+  for(int i = 0; i < enemyList.size(); i++) {
+    e = enemyList.get(i);
+
+    if (pCollideE(p, e)) {
+      noLoop();
+      println("Hit");
+    }
+  }
 }
 
 void keyPressed() {

@@ -5,12 +5,15 @@ class Enemy {
   Boundary b;
 
   Enemy(float xPos, float yPos, float radius, float speed, Boundary b) {
-    this.xPos = xPos;
-    this.yPos = yPos;
-    this.radius = radius;
+    this.b = b;
+
+    this.xPos = b.getWidth() / 2.0;
+    this.yPos = b.getHeight() / 2.0;
+    this.radius = radius * 2;
     this.speedX = speed;
     this.speedY = speed;
-    this.b = b;
+
+    updatePos(xPos, yPos); // keep the ball in bounds from random x/yPos
   }
 
   float getXpos() {
@@ -25,7 +28,7 @@ class Enemy {
     stroke(outlineColor);
     fill(fillColor);
     ellipseMode(CENTER);
-    ellipse(xPos, yPos, radius * 2, radius * 2);
+    ellipse(xPos, yPos, radius, radius);
   }
 
   void updatePos(float newXpos, float newYpos) {
@@ -36,24 +39,24 @@ class Enemy {
         flip -= 1;
     }
 
-    if (xPos + radius>= b.getEndX()) {
-        xPos = b.getEndX() - radius;
+    if (xPos + (radius / 2.0) >= b.getEndX()) {
+        xPos = b.getEndX() - (radius / 2.0) - b.getThickness();
         speedX *= -1;
         speedY *= flip;
     }
-    else if(xPos - radius + 1 <= b.getStartX()) {
-        xPos = b.getStartX() + radius;
+    else if(xPos - (radius / 2.0) <= b.getStartX()) {
+        xPos = b.getStartX() + (radius / 2.0) + b.getThickness();
         speedX *= -1;
         speedY *= flip;
     }
 
-    if(yPos + radius >= b.getEndY()) {
-        yPos = b.getEndY() - radius;
+    if(yPos + (radius / 2.0) >= b.getEndY()) {
+        yPos = b.getEndY() - (radius / 2.0) - b.getThickness();
         speedX *= flip;
         speedY *= -1;
     }
-    else if(yPos - radius <= b.getStartY()) {
-        yPos = b.getStartY() + radius;
+    else if(yPos - (radius / 2.0) <= b.getStartY()) {
+        yPos = b.getStartY() + (radius / 2.0) + b.getThickness();
         speedX *= flip;
         speedY *= -1;
     }
@@ -78,4 +81,5 @@ class Enemy {
   float getSize() {
     return radius;
   }
+
 }
