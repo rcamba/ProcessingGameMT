@@ -29,17 +29,22 @@ void initPlayer() {
 
 void initEnemies() {
   enemyAdditionInterval = 5; //seconds
-  addEnemy();
-  addEnemy();
-  addEnemy();
+  //spawn initial enemies only at top half of screen
+  addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY() / 2.0));
+  addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY() / 2.0));
+  addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY() / 2.0));
 }
 
 void addEnemy() {
+  addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY()));
+}
+
+void addEnemy(float x, float y) {
   float enemyScreenRatio = 0.00015;
   float enemyRadius = (b.getEndX() * b.getEndY()) * enemyScreenRatio;
   float enemySpeed = int(round(random(1, 2)));
 
-  enemyList.add(new Enemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY()), enemyRadius, enemySpeed, b));
+  enemyList.add(new Enemy(x, y, enemyRadius, enemySpeed, b));
   lastTimeEnemyAdded = millis();
 }
 
