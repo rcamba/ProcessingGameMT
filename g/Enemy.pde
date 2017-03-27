@@ -1,7 +1,9 @@
 class Enemy {
   float xPos, yPos, radius, speedX, speedY;
   color outlineColor = color(150, 0, 150);
-  color fillColor = color(0, 0, 50, 50);
+  color defaultColor =  color(0, 0, 50, 50);
+  color fillColor = defaultColor;
+  boolean newEnemyStatus = true;
   Boundary b;
 
   Enemy(float xPos, float yPos, float radius, float speed, Boundary b) {
@@ -38,7 +40,6 @@ class Enemy {
     if (flip == 0) {
         flip -= 1;
     }
-
     if (xPos + (radius / 2.0) >= b.getEndX()) {
         xPos = b.getEndX() - (radius / 2.0) - b.getThickness();
         speedX *= -1;
@@ -80,6 +81,30 @@ class Enemy {
 
   float getSize() {
     return radius;
+  }
+
+  boolean isNewEnemy() {
+    return newEnemyStatus;
+  }
+
+  void setNewEnemyStatus(boolean newStatus) {
+    newEnemyStatus = newStatus;
+  }
+
+  color getColor() {
+    return fillColor;
+  }
+
+  color getDefaultColor() {
+    return defaultColor;
+  }
+
+  void setColor(color c) {
+    fillColor = c;
+  }
+
+  void setColor(int c1, int c2, int c3) {
+    fillColor = color(c1, c2, c3);
   }
 
 }
