@@ -24,6 +24,7 @@ class Enemy {
   void display() {
     stroke(outlineColor);
     fill(fillColor);
+    ellipseMode(CENTER);
     ellipse(xPos, yPos, radius * 2, radius * 2);
   }
 

@@ -22,21 +22,21 @@ class Player {
 
   void setXpos(float newX) {
     xPos = newX;
-    if (xPos + size > b.getEndX()) {
-        xPos = b.getEndX() - size - b.getThickness() + 1;
+    if (xPos + (size / 2.0) > b.getEndX()) {
+        xPos = b.getEndX() - (size / 2.0) - b.getThickness();
     }
-    else if (xPos < b.getStartX()) {
-        xPos = b.getStartX() + b.getThickness() - 1;
+    else if (xPos - (size / 2.0) <= b.getStartX()) {
+        xPos = b.getStartX() + (size / 2.0) + b.getThickness();
     }
   }
 
   void setYpos(float newY) {
     yPos = newY;
-    if (yPos + size > b.getEndY()) {
-        yPos = b.getEndY() - size - b.getThickness() + 1;
+    if (yPos + (size / 2.0) >= b.getEndY()) {
+        yPos = b.getEndY() - (size / 2.0) - b.getThickness();
     }
-    else if (yPos < b.getStartY()) {
-        yPos = b.getStartY() + b.getThickness() - 1;
+    else if (yPos - (size / 2.0) <= b.getStartY()) {
+        yPos = b.getStartY() + (size / 2.0) + b.getThickness();
     }
   }
 
