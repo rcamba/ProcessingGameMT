@@ -10,7 +10,7 @@ float pSpeed = 4; // low speed causes boundary jutter/seizure like movement
 
 Boundary leftBoundary;
 Boundary rightBoundary;
-PowerUp pup;
+PowerUp leftPup, rightPup;
 
 float lastTimeEnemyAdded;
 float enemyAdditionInterval;
@@ -27,9 +27,7 @@ void setup() {
   rightEnemyList = new ArrayList<Enemy>();
 
   initBoundaries();
-
   initPlayers();
-
   initEnemies();
   initPowerUp();
 }
@@ -50,11 +48,11 @@ void initEnemies() {
   //spawn initial enemies only at top half of screen
   Enemy leftE, rightE;
   for(int i = 0; i < numOfInitEnemies; i ++) {
-    leftE = addEnemy(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY() / 2.0), leftBoundary);
+    leftE = createEnemy(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY() / 2.0), leftBoundary);
     leftE.setNewEnemyStatus(false);
     leftEnemyList.add(leftE);
 
-    rightE = addEnemy(random(rightBoundary.getStartX(), rightBoundary.getEndX()), random(rightBoundary.getStartY(), rightBoundary.getEndY() / 2.0), rightBoundary);
+    rightE = createEnemy(random(rightBoundary.getStartX(), rightBoundary.getEndX()), random(rightBoundary.getStartY(), rightBoundary.getEndY() / 2.0), rightBoundary);
     rightE.setNewEnemyStatus(false);
     rightEnemyList.add(rightE);
   }
@@ -63,16 +61,17 @@ void initEnemies() {
 void initPowerUp() {
   float powerUpScreenRatio = 0.000075;
   float powerUpRadius = (leftBoundary.getEndX() * leftBoundary.getEndY()) * powerUpScreenRatio;
-  pup = new PowerUp(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY()), powerUpRadius, leftBoundary);
+  leftPup = new PowerUp(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY()), powerUpRadius, leftBoundary);
+  rightPup = new PowerUp(random(rightBoundary.getStartX(), rightBoundary.getEndX()), random(rightBoundary.getStartY(), rightBoundary.getEndY()), powerUpRadius, rightBoundary);
 }
 
 
-Enemy addEnemy(Boundary b) {
-  return addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY()), b);
+Enemy createEnemy(Boundary b) {
+  return createEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY()), b);
 }
 
 
-Enemy addEnemy(float x, float y, Boundary b) {
+Enemy createEnemy(float x, float y, Boundary b) {
   float enemyScreenRatio = 0.00015;
   float enemyRadius = (b.getWidth() * b.getHeight()) * enemyScreenRatio;
   float enemySpeed = int(round(random(1, 2)));
@@ -117,13 +116,16 @@ void draw() {
   checkPlayerEnemyCollision(rightPlayer, rightEnemyList);
 
   drawPowerUp();
-  checkPlayerPowerUpCollision();
-
+  checkPlayerPowerUpCollision(leftPlayer, rightEnemyList, leftPup);  //left pup controls right enemies and vice versa
+  checkPlayerPowerUpCollision(rightPlayer, leftEnemyList, rightPup);
 }
+
 
 void drawPowerUp() {
-  pup.display();
+  leftPup.display();
+  rightPup.display();
 }
+
 
 boolean pCollideE(Player p_, Enemy e) {
   float distX = abs(e.getXpos() - p_.getXpos());
@@ -145,7 +147,7 @@ boolean pCollideE(Player p_, Enemy e) {
   return ((dx * dx) + (dy * dy)) <= (e.getSize() / 2.0) * (e.getSize() / 2.0);
 }
 
-boolean pCollidePup(Player p_, PowerUp pup_) {
+boolean pCollidePup(Player p_, PowerUp pup_) { // no inherit zzz
   float distX = abs(pup_.getXpos() - p_.getXpos());
   float distY = abs(pup_.getYpos() - p_.getYpos());
 
@@ -184,15 +186,15 @@ void checkPlayerEnemyCollision(Player p, ArrayList<Enemy> enemyList) {
   }
 }
 
-void checkPlayerPowerUpCollision() {
-  final float flickerDuration = pup.getLengthOfEffect() + 2; // 2 seconds
+void checkPlayerPowerUpCollision(Player p, ArrayList<Enemy> enemyList, PowerUp pup) {
+  final float flickerDuration = leftPup.getLengthOfEffect() + 2; // 2 seconds
 
-  if (pup.isVisible() && pCollidePup(leftPlayer, pup)) {
+  if (pup.isVisible() && pCollidePup(p, pup)) {
     pup.setVisibility(false);
     pup.setLastTimePickedUp(millis());
     Enemy e;
-    for(int i = 0; i < leftEnemyList.size(); i++) {
-      e = leftEnemyList.get(i);
+    for(int i = 0; i < enemyList.size(); i++) {
+      e = enemyList.get(i);
       if (e.isNewEnemy() == false) {
         e.setEdibleStatus(true);
         e.setColor(color(255, 255, 255, 100));
@@ -204,8 +206,8 @@ void checkPlayerPowerUpCollision() {
   // if last time picked up is -1 then it hasn't been picked up yet
   else if(pup.getLastTimePickedUp() > -1 && (millis() - pup.getLastTimePickedUp()) / 1000 >= pup.getLengthOfEffect()) {
     Enemy e;
-    for(int i = 0; i < leftEnemyList.size(); i++) {
-      e = leftEnemyList.get(i);
+    for(int i = 0; i < enemyList.size(); i++) {
+      e = enemyList.get(i);
       if ((millis() - pup.getLastTimePickedUp()) / 1000 < flickerDuration && e.isEdible()) { // only flicker those that were initially edible, otehrs aren't affected by powerup
         flickerEffect(e);
       }
@@ -292,8 +294,8 @@ void handleRightPlayerInput(Character keyChar) {
 
 void checkToAddMoreEnemies() {
   if ((millis() - lastTimeEnemyAdded) / 1000 >= enemyAdditionInterval)  {
-    addEnemy(leftBoundary);
-    addEnemy(rightBoundary);
+    leftEnemyList.add(createEnemy(leftBoundary));
+    rightEnemyList.add(createEnemy(rightBoundary));
   }
 }
 
