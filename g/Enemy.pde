@@ -4,6 +4,7 @@ class Enemy {
   color defaultColor =  color(0, 0, 50, 50);
   color fillColor = defaultColor;
   boolean newEnemyStatus = true;
+  boolean edibleStatus = false;
   Boundary b;
 
   Enemy(float xPos, float yPos, float radius, float speed, Boundary b) {
@@ -38,28 +39,28 @@ class Enemy {
     yPos = newYpos;
     int flip = int(round(random(0, 1)));
     if (flip == 0) {
-        flip -= 1;
+      flip -= 1;
     }
     if (xPos + (radius / 2.0) >= b.getEndX()) {
-        xPos = b.getEndX() - (radius / 2.0) - b.getThickness();
-        speedX *= -1;
-        speedY *= flip;
+      xPos = b.getEndX() - (radius / 2.0) - b.getThickness();
+      speedX *= -1;
+      speedY *= flip;
     }
     else if(xPos - (radius / 2.0) <= b.getStartX()) {
-        xPos = b.getStartX() + (radius / 2.0) + b.getThickness();
-        speedX *= -1;
-        speedY *= flip;
+      xPos = b.getStartX() + (radius / 2.0) + b.getThickness();
+      speedX *= -1;
+      speedY *= flip;
     }
 
     if(yPos + (radius / 2.0) >= b.getEndY()) {
-        yPos = b.getEndY() - (radius / 2.0) - b.getThickness();
-        speedX *= flip;
-        speedY *= -1;
+      yPos = b.getEndY() - (radius / 2.0) - b.getThickness();
+      speedX *= flip;
+      speedY *= -1;
     }
     else if(yPos - (radius / 2.0) <= b.getStartY()) {
-        yPos = b.getStartY() + (radius / 2.0) + b.getThickness();
-        speedX *= flip;
-        speedY *= -1;
+      yPos = b.getStartY() + (radius / 2.0) + b.getThickness();
+      speedX *= flip;
+      speedY *= -1;
     }
   }
 
@@ -105,6 +106,14 @@ class Enemy {
 
   void setColor(int c1, int c2, int c3) {
     fillColor = color(c1, c2, c3);
+  }
+
+  void setEdibleStatus(boolean newStatus) {
+    edibleStatus = newStatus;
+  }
+
+  boolean isEdible() {
+    return edibleStatus;
   }
 
 }

@@ -3,6 +3,7 @@ ArrayList<Character> keyPressedList;
 ArrayList<Enemy> enemyList;
 Player p;
 Boundary b;
+PowerUp pup;
 
 float lastTimeEnemyAdded;
 float enemyAdditionInterval;
@@ -19,6 +20,7 @@ void setup() {
   initLeftBoundary();
   initPlayer();
   initEnemies();
+  initPowerUp();
 }
 
 
@@ -30,11 +32,20 @@ void initPlayer() {
 
 
 void initEnemies() {
-  enemyAdditionInterval = 5; //seconds
+  enemyAdditionInterval = 3; //seconds
   //spawn initial enemies only at top half of screen
   addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY() / 2.0));
   addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY() / 2.0));
   addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY() / 2.0));
+  for(int i = 0; i < enemyList.size(); i ++) {
+    enemyList.get(i).setNewEnemyStatus(false);
+  }
+}
+
+void initPowerUp() {
+  float powerUpScreenRatio = 0.000075;
+  float powerUpRadius = (b.getEndX() * b.getEndY()) * powerUpScreenRatio;
+  pup = new PowerUp(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY()), powerUpRadius, b);
 }
 
 
@@ -76,27 +87,53 @@ void draw() {
 
   checkPlayerEnemyCollision();
 
+  drawPowerUp();
+  checkPlayerPowerUpCollision();
+
 }
 
+void drawPowerUp() {
+  pup.display();
+}
 
-boolean pCollideE(Player p, Enemy e) {
-  float distX = abs(e.getXpos() - p.getXpos());
-  float distY = abs(e.getYpos() - p.getYpos());
+boolean pCollideE(Player p_, Enemy e) {
+  float distX = abs(e.getXpos() - p_.getXpos());
+  float distY = abs(e.getYpos() - p_.getYpos());
 
-  if (distX > (p.getSize() / 2.0) + (e.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
-  if (distY > (p.getSize() / 2.0) + (e.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
+  if (distX > (p_.getSize() / 2.0) + (e.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
+  if (distY > (p_.getSize() / 2.0) + (e.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
 
-  if (distX <= (p.getSize() / 2.0)) {
+  if (distX <= (p_.getSize() / 2.0)) {
     return true;
   }
-  if (distY <= (p.getSize() / 2.0)) {
+  if (distY <= (p_.getSize() / 2.0)) {
     return true;
   }
 
-  float dx = distX - (p.getSize() / 2.0);
-  float dy = distY - (p.getSize() / 2.0);
+  float dx = distX - (p_.getSize() / 2.0);
+  float dy = distY - (p_.getSize() / 2.0);
 
   return ((dx * dx) + (dy * dy)) <= (e.getSize() / 2.0) * (e.getSize() / 2.0);
+}
+
+boolean pCollidePup(Player p_, PowerUp pup_) {
+  float distX = abs(pup_.getXpos() - p_.getXpos());
+  float distY = abs(pup_.getYpos() - p_.getYpos());
+
+  if (distX > (p_.getSize() / 2.0) + (pup_.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
+  if (distY > (p_.getSize() / 2.0) + (pup_.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
+
+  if (distX <= (p_.getSize() / 2.0)) {
+    return true;
+  }
+  if (distY <= (p_.getSize() / 2.0)) {
+    return true;
+  }
+
+  float dx = distX - (p_.getSize() / 2.0);
+  float dy = distY - (p_.getSize() / 2.0);
+
+  return ((dx * dx) + (dy * dy)) <= (pup_.getSize() / 2.0) * (pup_.getSize() / 2.0);
 }
 
 
@@ -106,13 +143,54 @@ void checkPlayerEnemyCollision() {
     e = enemyList.get(i);
     if(e.isNewEnemy() == false) { // new enemies cannot be collided in to until cooldown wears off
       if (pCollideE(p, e)) {
-        noLoop();
-        println("Hit");
+        if(e.isEdible()) {
+          enemyList.remove(enemyList.indexOf(e));
+        }
+        else {
+          noLoop();
+          println("Hit");
+        }
       }
     }
   }
 }
 
+void checkPlayerPowerUpCollision() {
+  final float flickerDuration = pup.getLengthOfEffect() + 2; // 2 seconds
+
+  if (pup.isVisible() && pCollidePup(p, pup)) {
+    pup.setVisibility(false);
+    pup.setLastTimePickedUp(millis());
+    Enemy e;
+    for(int i = 0; i < enemyList.size(); i++) {
+      e = enemyList.get(i);
+      if (e.isNewEnemy() == false) {
+        e.setEdibleStatus(true);
+        e.setColor(color(255, 255, 255, 100));
+        e.display();
+      }
+    }
+  }
+
+  // if last time picked up is -1 then it hasn't been picked up yet
+  else if(pup.getLastTimePickedUp() > -1 && (millis() - pup.getLastTimePickedUp()) / 1000 >= pup.getLengthOfEffect()) {
+    Enemy e;
+    for(int i = 0; i < enemyList.size(); i++) {
+      e = enemyList.get(i);
+      if ((millis() - pup.getLastTimePickedUp()) / 1000 < flickerDuration) {
+        flickerEffect(e);
+      }
+      else {
+        e.setEdibleStatus(false);
+        e.setColor(e.getDefaultColor());
+      }
+    }
+    if(pup.isVisible() == false && (millis() - pup.getLastTimePickedUp()) / 1000 >= pup.getRespawnInterval()) {
+      pup.randomizePos();
+      pup.setVisibility(true);
+    }
+  }
+}
 
 void keyPressed() {
   if (keyPressedList.indexOf(key) == -1) {
@@ -165,7 +243,6 @@ void checkToAddMoreEnemies() {
   }
 }
 
-
 void newEnemyWarning() {
   Enemy e;
   float newEnemyCoolDownTime = 2; // seconds
@@ -173,19 +250,23 @@ void newEnemyWarning() {
     e = enemyList.get(i);
 
     if (e.isNewEnemy() && (millis() - lastTimeEnemyAdded) / 1000 <= newEnemyCoolDownTime) {
-      //flicker effect - swap fill color ever 2/100th of a second;
-      color c = e.getDefaultColor();
-      if((round(millis() - lastTimeEnemyAdded) / 100) % 2 == 0) {
-        e.setColor(color(red(c), green(c), blue(c), alpha(c) + 200));
-      }
-      else {
-        e.setColor(color(red(c), green(c), blue(c), alpha(c) - 200));
-      }
+      flickerEffect(e);
     }
-    else {
+    else if (e.isNewEnemy()) {
       e.setNewEnemyStatus(false);
       e.setColor(e.getDefaultColor());
     }
+  }
+}
+
+void flickerEffect (Enemy e) {
+   //flicker effect - swap fill color ever 2/100th of a second;
+  color c = e.getDefaultColor();
+  if((round(millis() - lastTimeEnemyAdded) / 100) % 2 == 0) {
+    e.setColor(color(red(c), green(c), blue(c), alpha(c) + 200));
+  }
+  else {
+    e.setColor(color(red(c), green(c), blue(c), alpha(c) - 200));
   }
 }
 
