@@ -4,10 +4,18 @@ class Boundary {
     color fillColor = color(0, 0, 50);
     int outlineThickness = 3;
     Boundary(float startX, float endX, float startY, float endY){
-        this.startX = startX;
-        this.endX = endX;
-        this.startY = startY;
-        this.endY = endY;
+      this.startX = startX;
+      this.endX = endX;
+      this.startY = startY;
+      this.endY = endY;
+    }
+
+    Boundary(float startX, float endX, float startY, float endY, color outlineColor){
+      this.startX = startX;
+      this.endX = endX;
+      this.startY = startY;
+      this.endY = endY;
+      this.outlineColor = outlineColor;
     }
 
     void display() {

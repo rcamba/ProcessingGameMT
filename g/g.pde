@@ -1,8 +1,14 @@
 color bgColor = color(50, 50, 50);
 ArrayList<Character> keyPressedList;
 ArrayList<Enemy> enemyList;
-Player p;
-Boundary b;
+
+Player leftPlayer;
+Player rightPlayer;
+float pSize = 20;
+float pSpeed = 4; // low speed causes boundary jutter/seizure like movement
+
+Boundary leftBoundary;
+Boundary rightBoundary;
 PowerUp pup;
 
 float lastTimeEnemyAdded;
@@ -17,26 +23,30 @@ void setup() {
   keyPressedList = new ArrayList<Character>();
   enemyList = new ArrayList<Enemy>();
 
-  initLeftBoundary();
-  initPlayer();
+  initBoundaries();
+
+  initPlayers();
+
   initEnemies();
   initPowerUp();
 }
 
 
-void initPlayer() {
-  float pSize = 20;
-  float pSpeed = 4; // low speed causes boundary jutter/seizure like movement
-  p = new Player(b.getEndX() / 2.0 - (pSize / 2.0), b.getEndY() * 0.90, pSize, pSpeed, b);
+void initPlayers() {
+  leftPlayer = new Player(((leftBoundary.getStartX() + leftBoundary.getEndX()) / 2.0) - (pSize / 2.0),
+                             leftBoundary.getEndY() * 0.90,
+                             pSize, pSpeed, leftBoundary);
+  rightPlayer = new Player(((rightBoundary.getStartX() + rightBoundary.getEndX()) / 2.0) - (pSize / 2.0),
+                             rightBoundary.getEndY() * 0.90,
+                             pSize, pSpeed, rightBoundary, color(160, 85, 100));
 }
-
 
 void initEnemies() {
   enemyAdditionInterval = 3; //seconds
   //spawn initial enemies only at top half of screen
-  addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY() / 2.0));
-  addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY() / 2.0));
-  addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY() / 2.0));
+  addEnemy(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY() / 2.0));
+  addEnemy(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY() / 2.0));
+  addEnemy(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY() / 2.0));
   for(int i = 0; i < enemyList.size(); i ++) {
     enemyList.get(i).setNewEnemyStatus(false);
   }
@@ -44,40 +54,48 @@ void initEnemies() {
 
 void initPowerUp() {
   float powerUpScreenRatio = 0.000075;
-  float powerUpRadius = (b.getEndX() * b.getEndY()) * powerUpScreenRatio;
-  pup = new PowerUp(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY()), powerUpRadius, b);
+  float powerUpRadius = (leftBoundary.getEndX() * leftBoundary.getEndY()) * powerUpScreenRatio;
+  pup = new PowerUp(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY()), powerUpRadius, leftBoundary);
 }
 
 
 void addEnemy() {
-  addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY()));
+  addEnemy(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY()));
 }
 
 
 void addEnemy(float x, float y) {
   float enemyScreenRatio = 0.00015;
-  float enemyRadius = (b.getEndX() * b.getEndY()) * enemyScreenRatio;
+  float enemyRadius = (leftBoundary.getEndX() * leftBoundary.getEndY()) * enemyScreenRatio;
   float enemySpeed = int(round(random(1, 2)));
-  enemyList.add(new Enemy(x, y, enemyRadius, enemySpeed, b));
+  enemyList.add(new Enemy(x, y, enemyRadius, enemySpeed, leftBoundary));
   lastTimeEnemyAdded = millis();
 }
 
 
-void initLeftBoundary() {
+void initBoundaries() {
   float lBoundaryStartX = 0;
   float lBoundaryEndX = width / 2.0;
   float lBoundaryStartY = 0;
   float lBoundaryEndY = height;
-  b = new Boundary(lBoundaryStartX, lBoundaryEndX, lBoundaryStartY, lBoundaryEndY);
+
+  leftBoundary = new Boundary(lBoundaryStartX, lBoundaryEndX, lBoundaryStartY, lBoundaryEndY);
+
+  float rBoundaryStartX = lBoundaryEndX + 1;
+  float rBoundaryEndX = width;
+  float rBoundaryStartY = 0;
+  float rBoundaryEndY = height;
+  rightBoundary = new Boundary(rBoundaryStartX, rBoundaryEndX, rBoundaryStartY, rBoundaryEndY, color(225, 180, 50));
 }
 
 
 void draw() {
   background(bgColor);
-  b.display();
+  leftBoundary.display();
+  rightBoundary.display();
 
-  handlePlayerInput();
-  drawPlayer();
+  handlePlayersInputs();
+  drawPlayers();
 
   checkToAddMoreEnemies();
   newEnemyWarning();
@@ -142,7 +160,7 @@ void checkPlayerEnemyCollision() {
   for(int i = 0; i < enemyList.size(); i++) {
     e = enemyList.get(i);
     if(e.isNewEnemy() == false) { // new enemies cannot be collided in to until cooldown wears off
-      if (pCollideE(p, e)) {
+      if (pCollideE(leftPlayer, e)) {
         if(e.isEdible()) {
           enemyList.remove(enemyList.indexOf(e));
         }
@@ -158,7 +176,7 @@ void checkPlayerEnemyCollision() {
 void checkPlayerPowerUpCollision() {
   final float flickerDuration = pup.getLengthOfEffect() + 2; // 2 seconds
 
-  if (pup.isVisible() && pCollidePup(p, pup)) {
+  if (pup.isVisible() && pCollidePup(leftPlayer, pup)) {
     pup.setVisibility(false);
     pup.setLastTimePickedUp(millis());
     Enemy e;
@@ -177,7 +195,7 @@ void checkPlayerPowerUpCollision() {
     Enemy e;
     for(int i = 0; i < enemyList.size(); i++) {
       e = enemyList.get(i);
-      if ((millis() - pup.getLastTimePickedUp()) / 1000 < flickerDuration) {
+      if ((millis() - pup.getLastTimePickedUp()) / 1000 < flickerDuration && e.isEdible()) { // only flicker those that were initially edible, otehrs aren't affected by powerup
         flickerEffect(e);
       }
       else {
@@ -206,8 +224,9 @@ void keyReleased() {
 }
 
 
-void drawPlayer() {
-  p.display();
+void drawPlayers() {
+  leftPlayer.display();
+  rightPlayer.display();
 }
 
 
@@ -218,21 +237,41 @@ void drawEnemies() {
 }
 
 
-void handlePlayerInput() {
-
+void handlePlayersInputs() {
   for(int i = 0; i < keyPressedList.size(); i ++) {
-    if (keyPressedList.get(i).equals('w')) {
-       p.setYpos(p.getYpos() - p.getSpeed());
-    }
-    else if (keyPressedList.get(i).equals('s')) {
-      p.setYpos(p.getYpos() + p.getSpeed());
-    }
-    else if (keyPressedList.get(i).equals('a')) {
-      p.setXpos(p.getXpos() - p.getSpeed());
-    }
-    else if (keyPressedList.get(i).equals('d')) {
-      p.setXpos(p.getXpos() + p.getSpeed());
-    }
+
+    handleLeftPlayerInput(keyPressedList.get(i));
+    handleRightPlayerInput(keyPressedList.get(i));
+  }
+}
+
+void handleLeftPlayerInput(Character keyChar) {
+  if (keyChar.equals('w')) {
+     leftPlayer.setYpos(leftPlayer.getYpos() - leftPlayer.getSpeed());
+  }
+  else if (keyChar.equals('s')) {
+    leftPlayer.setYpos(leftPlayer.getYpos() + leftPlayer.getSpeed());
+  }
+  else if (keyChar.equals('a')) {
+    leftPlayer.setXpos(leftPlayer.getXpos() - leftPlayer.getSpeed());
+  }
+  else if (keyChar.equals('d')) {
+    leftPlayer.setXpos(leftPlayer.getXpos() + leftPlayer.getSpeed());
+  }
+}
+
+void handleRightPlayerInput(Character keyChar) {
+  if (keyChar.equals('i')) {
+     rightPlayer.setYpos(rightPlayer.getYpos() - rightPlayer.getSpeed());
+  }
+  else if (keyChar.equals('k')) {
+    rightPlayer.setYpos(rightPlayer.getYpos() + rightPlayer.getSpeed());
+  }
+  else if (keyChar.equals('j')) {
+    rightPlayer.setXpos(rightPlayer.getXpos() - rightPlayer.getSpeed());
+  }
+  else if (keyChar.equals('l')) {
+    rightPlayer.setXpos(rightPlayer.getXpos() + rightPlayer.getSpeed());
   }
 }
 

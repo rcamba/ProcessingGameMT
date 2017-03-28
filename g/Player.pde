@@ -1,6 +1,6 @@
 class Player {
   float xPos, yPos, size, speed;
-  color playerOutline = color(10, 170, 125);
+  color playerOutline = color(10, 170, 125); // change palyer outline tooo along with fill for other play
   color playerColor = color(130, 260, 230, 150);
   Boundary b;
 
@@ -10,6 +10,15 @@ class Player {
     this.size = pSize;
     this.speed = pSpeed;
     this.b = b;
+  }
+
+  Player(float pXpos, float pYpos, float pSize, float pSpeed, Boundary b, color c) {
+    this.xPos = pXpos;
+    this.yPos = pYpos;
+    this.size = pSize;
+    this.speed = pSpeed;
+    this.b = b;
+    this.playerColor = c;
   }
 
   float getXpos() {
