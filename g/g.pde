@@ -1,6 +1,7 @@
 color bgColor = color(50, 50, 50);
 ArrayList<Character> keyPressedList;
-ArrayList<Enemy> enemyList;
+ArrayList<Enemy> leftEnemyList;
+ArrayList<Enemy> rightEnemyList;
 
 Player leftPlayer;
 Player rightPlayer;
@@ -21,7 +22,9 @@ void setup() {
   smooth();
 
   keyPressedList = new ArrayList<Character>();
-  enemyList = new ArrayList<Enemy>();
+
+  leftEnemyList = new ArrayList<Enemy>();
+  rightEnemyList = new ArrayList<Enemy>();
 
   initBoundaries();
 
@@ -43,12 +46,17 @@ void initPlayers() {
 
 void initEnemies() {
   enemyAdditionInterval = 3; //seconds
+  int numOfInitEnemies = 3;
   //spawn initial enemies only at top half of screen
-  addEnemy(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY() / 2.0));
-  addEnemy(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY() / 2.0));
-  addEnemy(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY() / 2.0));
-  for(int i = 0; i < enemyList.size(); i ++) {
-    enemyList.get(i).setNewEnemyStatus(false);
+  Enemy leftE, rightE;
+  for(int i = 0; i < numOfInitEnemies; i ++) {
+    leftE = addEnemy(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY() / 2.0), leftBoundary);
+    leftE.setNewEnemyStatus(false);
+    leftEnemyList.add(leftE);
+
+    rightE = addEnemy(random(rightBoundary.getStartX(), rightBoundary.getEndX()), random(rightBoundary.getStartY(), rightBoundary.getEndY() / 2.0), rightBoundary);
+    rightE.setNewEnemyStatus(false);
+    rightEnemyList.add(rightE);
   }
 }
 
@@ -59,17 +67,18 @@ void initPowerUp() {
 }
 
 
-void addEnemy() {
-  addEnemy(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY()));
+Enemy addEnemy(Boundary b) {
+  return addEnemy(random(b.getStartX(), b.getEndX()), random(b.getStartY(), b.getEndY()), b);
 }
 
 
-void addEnemy(float x, float y) {
+Enemy addEnemy(float x, float y, Boundary b) {
   float enemyScreenRatio = 0.00015;
-  float enemyRadius = (leftBoundary.getEndX() * leftBoundary.getEndY()) * enemyScreenRatio;
+  float enemyRadius = (b.getWidth() * b.getHeight()) * enemyScreenRatio;
   float enemySpeed = int(round(random(1, 2)));
-  enemyList.add(new Enemy(x, y, enemyRadius, enemySpeed, leftBoundary));
   lastTimeEnemyAdded = millis();
+
+  return new Enemy(x, y, enemyRadius, enemySpeed, b);
 }
 
 
@@ -78,7 +87,6 @@ void initBoundaries() {
   float lBoundaryEndX = width / 2.0;
   float lBoundaryStartY = 0;
   float lBoundaryEndY = height;
-
   leftBoundary = new Boundary(lBoundaryStartX, lBoundaryEndX, lBoundaryStartY, lBoundaryEndY);
 
   float rBoundaryStartX = lBoundaryEndX + 1;
@@ -98,12 +106,15 @@ void draw() {
   drawPlayers();
 
   checkToAddMoreEnemies();
-  newEnemyWarning();
+  newEnemyWarning(leftEnemyList);
+  newEnemyWarning(rightEnemyList);
 
-  updateEnemiesPos();
+  updateEnemiesPos(leftEnemyList);
+  updateEnemiesPos(rightEnemyList);
   drawEnemies();
 
-  checkPlayerEnemyCollision();
+  checkPlayerEnemyCollision(leftPlayer, leftEnemyList);
+  checkPlayerEnemyCollision(rightPlayer, rightEnemyList);
 
   drawPowerUp();
   checkPlayerPowerUpCollision();
@@ -155,12 +166,12 @@ boolean pCollidePup(Player p_, PowerUp pup_) {
 }
 
 
-void checkPlayerEnemyCollision() {
+void checkPlayerEnemyCollision(Player p, ArrayList<Enemy> enemyList) {
   Enemy e;
   for(int i = 0; i < enemyList.size(); i++) {
     e = enemyList.get(i);
     if(e.isNewEnemy() == false) { // new enemies cannot be collided in to until cooldown wears off
-      if (pCollideE(leftPlayer, e)) {
+      if (pCollideE(p, e)) {
         if(e.isEdible()) {
           enemyList.remove(enemyList.indexOf(e));
         }
@@ -180,8 +191,8 @@ void checkPlayerPowerUpCollision() {
     pup.setVisibility(false);
     pup.setLastTimePickedUp(millis());
     Enemy e;
-    for(int i = 0; i < enemyList.size(); i++) {
-      e = enemyList.get(i);
+    for(int i = 0; i < leftEnemyList.size(); i++) {
+      e = leftEnemyList.get(i);
       if (e.isNewEnemy() == false) {
         e.setEdibleStatus(true);
         e.setColor(color(255, 255, 255, 100));
@@ -193,8 +204,8 @@ void checkPlayerPowerUpCollision() {
   // if last time picked up is -1 then it hasn't been picked up yet
   else if(pup.getLastTimePickedUp() > -1 && (millis() - pup.getLastTimePickedUp()) / 1000 >= pup.getLengthOfEffect()) {
     Enemy e;
-    for(int i = 0; i < enemyList.size(); i++) {
-      e = enemyList.get(i);
+    for(int i = 0; i < leftEnemyList.size(); i++) {
+      e = leftEnemyList.get(i);
       if ((millis() - pup.getLastTimePickedUp()) / 1000 < flickerDuration && e.isEdible()) { // only flicker those that were initially edible, otehrs aren't affected by powerup
         flickerEffect(e);
       }
@@ -231,15 +242,18 @@ void drawPlayers() {
 
 
 void drawEnemies() {
-  for(int i = 0; i < enemyList.size(); i++) {
-    enemyList.get(i).display();
+  for(int i = 0; i < leftEnemyList.size(); i++) {
+    leftEnemyList.get(i).display();
+  }
+
+  for(int i = 0; i < rightEnemyList.size(); i++) {
+    rightEnemyList.get(i).display();
   }
 }
 
 
 void handlePlayersInputs() {
   for(int i = 0; i < keyPressedList.size(); i ++) {
-
     handleLeftPlayerInput(keyPressedList.get(i));
     handleRightPlayerInput(keyPressedList.get(i));
   }
@@ -278,11 +292,13 @@ void handleRightPlayerInput(Character keyChar) {
 
 void checkToAddMoreEnemies() {
   if ((millis() - lastTimeEnemyAdded) / 1000 >= enemyAdditionInterval)  {
-    addEnemy();
+    addEnemy(leftBoundary);
+    addEnemy(rightBoundary);
   }
 }
 
-void newEnemyWarning() {
+
+void newEnemyWarning(ArrayList<Enemy> enemyList) {
   Enemy e;
   float newEnemyCoolDownTime = 2; // seconds
   for(int i = 0; i < enemyList.size(); i++) {
@@ -310,7 +326,7 @@ void flickerEffect (Enemy e) {
 }
 
 
-void updateEnemiesPos() {
+void updateEnemiesPos(ArrayList<Enemy> enemyList) {
   Enemy e;
   for(int i = 0; i < enemyList.size(); i++) {
     e = enemyList.get(i);

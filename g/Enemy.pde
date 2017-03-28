@@ -19,6 +19,19 @@ class Enemy {
     updatePos(xPos, yPos); // keep the ball in bounds from random x/yPos
   }
 
+  Enemy(float xPos, float yPos, float radius, float speed, Boundary b, color fillColor) {
+    this.b = b;
+
+    this.xPos = b.getWidth() / 2.0;
+    this.yPos = b.getHeight() / 2.0;
+    this.radius = radius * 2;
+    this.speedX = speed;
+    this.speedY = speed;
+    this.fillColor = fillColor;
+
+    updatePos(xPos, yPos); // keep the ball in bounds from random x/yPos
+  }
+
   float getXpos() {
     return xPos;
   }
