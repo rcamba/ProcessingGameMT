@@ -49,16 +49,16 @@ void initializeGame() {
 
 void initBoundaries() {
   float lBoundaryStartX = 0;
-  float lBoundaryEndX = width / 2.0;
+  float lBoundaryEndX = (width / 2.0);
   float lBoundaryStartY = 0;
-  float lBoundaryEndY = height;
+  float lBoundaryEndY = height - (Boundary.outlineThickness / 2.0);
   leftBoundary = new Boundary(lBoundaryStartX, lBoundaryEndX, lBoundaryStartY, lBoundaryEndY);
 
-  float rBoundaryStartX = lBoundaryEndX + 1;
-  float rBoundaryEndX = width;
+  float rBoundaryStartX = lBoundaryEndX;
+  float rBoundaryEndX = width - Boundary.outlineThickness;
   float rBoundaryStartY = 0;
-  float rBoundaryEndY = height;
-  rightBoundary = new Boundary(rBoundaryStartX, rBoundaryEndX, rBoundaryStartY, rBoundaryEndY, color(225, 180, 50));
+  float rBoundaryEndY = height - (Boundary.outlineThickness / 2.0);
+  rightBoundary = new Boundary(rBoundaryStartX, rBoundaryEndX, rBoundaryStartY, rBoundaryEndY);
 }
 
 
@@ -68,7 +68,10 @@ void initPlayers() {
                              pSize, pSpeed, leftBoundary);
   rightPlayer = new Player(((rightBoundary.getStartX() + rightBoundary.getEndX()) / 2.0) - (pSize / 2.0),
                              rightBoundary.getEndY() * 0.90,
-                             pSize, pSpeed, rightBoundary, color(160, 180, 100));
+                             pSize, pSpeed, rightBoundary, color(140, 120, 200));
+
+  leftBoundary.setOutlineColor(rightPlayer.getColor());
+  rightBoundary.setOutlineColor(leftPlayer.getColor());
 }
 
 

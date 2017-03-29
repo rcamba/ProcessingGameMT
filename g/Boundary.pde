@@ -1,8 +1,8 @@
 class Boundary {
     float startX,  endX,  startY,  endY;
     color outlineColor = color(200, 200, 0);
-    color fillColor = color(0, 0, 50);
-    int outlineThickness = 3;
+    final static int outlineThickness = 3;
+
     Boundary(float startX, float endX, float startY, float endY){
       this.startX = startX;
       this.endX = endX;
@@ -25,8 +25,8 @@ class Boundary {
         line(startX, startY, endX, startY); // top
         line(startX, startY, startX, endY); // left
 
-        line(endX, startY, endX, endY); // bottom
-        line(endX, endY, startY, endY); // right
+        line(endX, startY, endX, endY); // right
+        line(startX, endY, endX, endY); // bottom
 
         strokeWeight(1); //reset stroke thickness
     }
@@ -57,5 +57,10 @@ class Boundary {
 
     float getHeight() {
       return endY - startY;
+    }
+
+    void setOutlineColor(color c) {
+
+      outlineColor = c;
     }
 }

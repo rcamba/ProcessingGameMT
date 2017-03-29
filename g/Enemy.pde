@@ -27,6 +27,7 @@ class Enemy {
     this.radius = radius * 2;
     this.speedX = speed;
     this.speedY = speed;
+    this.defaultColor = fillColor;
     this.fillColor = fillColor;
 
     updatePos(xPos, yPos); // keep the ball in bounds from random x/yPos

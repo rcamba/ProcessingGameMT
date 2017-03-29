@@ -1,6 +1,6 @@
 class Player {
   float xPos, yPos, size, speed;
-  color playerOutline = color(10, 170, 125); // change palyer outline tooo along with fill for other play
+  color playerOutline = color(255, 255, 255);
   color playerColor = color(130, 260, 230, 150);
   Boundary b;
 
@@ -62,5 +62,9 @@ class Player {
 
   float getSpeed() {
     return speed;
+  }
+
+  color getColor() {
+    return playerColor;
   }
 }
