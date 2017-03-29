@@ -91,8 +91,9 @@ void initEnemies() {
 void initPowerUp() {
   float powerUpScreenRatio = 0.000075;
   float powerUpRadius = (leftBoundary.getEndX() * leftBoundary.getEndY()) * powerUpScreenRatio;
-  leftPup = new PowerUp(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY()), powerUpRadius, leftBoundary);
-  rightPup = new PowerUp(random(rightBoundary.getStartX(), rightBoundary.getEndX()), random(rightBoundary.getStartY(), rightBoundary.getEndY()), powerUpRadius, rightBoundary);
+  //spawn initial power ups only at top half of screen
+  leftPup = new PowerUp(random(leftBoundary.getStartX(), leftBoundary.getEndX()), random(leftBoundary.getStartY(), leftBoundary.getEndY() / 2.0), powerUpRadius, leftBoundary);
+  rightPup = new PowerUp(random(rightBoundary.getStartX(), rightBoundary.getEndX()), random(rightBoundary.getStartY(), rightBoundary.getEndY() / 2.0), powerUpRadius, rightBoundary);
 }
 
 
