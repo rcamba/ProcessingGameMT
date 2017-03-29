@@ -19,6 +19,7 @@ float lastTimeRestarted = -1;
 float gameStartTime;
 float scoreTime = -1;
 
+
 void setup() {
   size(400, 600);
   background(bgColor);
@@ -30,6 +31,37 @@ void setup() {
 }
 
 
+void initializeGame() {
+  leftEnemyList = new ArrayList<Enemy>();
+  rightEnemyList = new ArrayList<Enemy>();
+
+  initBoundaries();
+  initPlayers();
+  initEnemies();
+  initPowerUp();
+
+  gameStartTime = millis();
+  scoreTime = -1;
+
+  alive = true;
+}
+
+
+void initBoundaries() {
+  float lBoundaryStartX = 0;
+  float lBoundaryEndX = width / 2.0;
+  float lBoundaryStartY = 0;
+  float lBoundaryEndY = height;
+  leftBoundary = new Boundary(lBoundaryStartX, lBoundaryEndX, lBoundaryStartY, lBoundaryEndY);
+
+  float rBoundaryStartX = lBoundaryEndX + 1;
+  float rBoundaryEndX = width;
+  float rBoundaryStartY = 0;
+  float rBoundaryEndY = height;
+  rightBoundary = new Boundary(rBoundaryStartX, rBoundaryEndX, rBoundaryStartY, rBoundaryEndY, color(225, 180, 50));
+}
+
+
 void initPlayers() {
   leftPlayer = new Player(((leftBoundary.getStartX() + leftBoundary.getEndX()) / 2.0) - (pSize / 2.0),
                              leftBoundary.getEndY() * 0.90,
@@ -38,6 +70,7 @@ void initPlayers() {
                              rightBoundary.getEndY() * 0.90,
                              pSize, pSpeed, rightBoundary, color(160, 180, 100));
 }
+
 
 void initEnemies() {
   enemyAdditionInterval = 3; //seconds
@@ -78,21 +111,6 @@ Enemy createEnemy(float x, float y, Boundary b) {
 }
 
 
-void initBoundaries() {
-  float lBoundaryStartX = 0;
-  float lBoundaryEndX = width / 2.0;
-  float lBoundaryStartY = 0;
-  float lBoundaryEndY = height;
-  leftBoundary = new Boundary(lBoundaryStartX, lBoundaryEndX, lBoundaryStartY, lBoundaryEndY);
-
-  float rBoundaryStartX = lBoundaryEndX + 1;
-  float rBoundaryEndX = width;
-  float rBoundaryStartY = 0;
-  float rBoundaryEndY = height;
-  rightBoundary = new Boundary(rBoundaryStartX, rBoundaryEndX, rBoundaryStartY, rBoundaryEndY, color(225, 180, 50));
-}
-
-
 void draw() {
   if (alive) {
     background(bgColor);
@@ -118,159 +136,9 @@ void draw() {
     checkPlayerPowerUpCollision(rightPlayer, leftEnemyList, rightPup);
   }
   else {
-    float tWidth;
-    String restartPrompt = "Press 'r' to restart game";
-    if (scoreTime == -1) { // only caclulate it once until restarted
-      scoreTime = (millis() - gameStartTime) / 1000; //convert milliseconds to seconds
-    }
-
-    textSize(25);
-    stroke(255);
-    fill(255);
-    tWidth = textWidth(Float.toString(scoreTime)) / 2.0;
-    text(nf(scoreTime, 0, 2), (width / 2.0) - tWidth, height / 2.0);
-
-    tWidth = textWidth(restartPrompt) / 2.0;
-    //adding the textAscent() and textDescent() values will give you the total height of the line.
-    text(restartPrompt, (width / 2.0) - tWidth, height / 2.0 + textAscent() + textDescent());
+    showGameOverScreen();
 
     handlePlayersInputs();
-  }
-}
-
-
-void drawPowerUp() {
-  leftPup.display();
-  rightPup.display();
-}
-
-
-boolean pCollideE(Player p_, Enemy e) {
-  float distX = abs(e.getXpos() - p_.getXpos());
-  float distY = abs(e.getYpos() - p_.getYpos());
-
-  if (distX > (p_.getSize() / 2.0) + (e.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
-  if (distY > (p_.getSize() / 2.0) + (e.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
-
-  if (distX <= (p_.getSize() / 2.0)) {
-    return true;
-  }
-  if (distY <= (p_.getSize() / 2.0)) {
-    return true;
-  }
-
-  float dx = distX - (p_.getSize() / 2.0);
-  float dy = distY - (p_.getSize() / 2.0);
-
-  return ((dx * dx) + (dy * dy)) <= (e.getSize() / 2.0) * (e.getSize() / 2.0);
-}
-
-boolean pCollidePup(Player p_, PowerUp pup_) { // no inherit zzz
-  float distX = abs(pup_.getXpos() - p_.getXpos());
-  float distY = abs(pup_.getYpos() - p_.getYpos());
-
-  if (distX > (p_.getSize() / 2.0) + (pup_.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
-  if (distY > (p_.getSize() / 2.0) + (pup_.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
-
-  if (distX <= (p_.getSize() / 2.0)) {
-    return true;
-  }
-  if (distY <= (p_.getSize() / 2.0)) {
-    return true;
-  }
-
-  float dx = distX - (p_.getSize() / 2.0);
-  float dy = distY - (p_.getSize() / 2.0);
-
-  return ((dx * dx) + (dy * dy)) <= (pup_.getSize() / 2.0) * (pup_.getSize() / 2.0);
-}
-
-
-void checkPlayerEnemyCollision(Player p, ArrayList<Enemy> enemyList) {
-  Enemy e;
-  for(int i = 0; i < enemyList.size(); i++) {
-    e = enemyList.get(i);
-    if(e.isNewEnemy() == false) { // new enemies cannot be collided in to until cooldown wears off
-      if (pCollideE(p, e)) {
-        if(e.isEdible()) {
-          enemyList.remove(enemyList.indexOf(e));
-        }
-        else {
-          alive = false;
-        }
-      }
-    }
-  }
-}
-
-void checkPlayerPowerUpCollision(Player p, ArrayList<Enemy> enemyList, PowerUp pup) {
-  final float flickerDuration = leftPup.getLengthOfEffect() + 2; // 2 seconds
-
-  //check for pup collision, if hit make enemies edible
-  if (pup.isVisible() && pCollidePup(p, pup)) {
-    pup.setVisibility(false);
-    pup.setLastTimePickedUp(millis());
-    Enemy e;
-    for(int i = 0; i < enemyList.size(); i++) {
-      e = enemyList.get(i);
-      if (e.isNewEnemy() == false) {
-        e.setEdibleStatus(true);
-        e.setColor(color(255, 255, 255, 100));
-        e.display();
-      }
-    }
-  }
-
-  // if last time picked up is -1 then it hasn't been picked up yet
-  else if(pup.getLastTimePickedUp() > -1 && (millis() - pup.getLastTimePickedUp()) / 1000 >= pup.getLengthOfEffect()) {
-    Enemy e;
-    for(int i = 0; i < enemyList.size(); i++) {
-      e = enemyList.get(i);
-      if ((millis() - pup.getLastTimePickedUp()) / 1000 < flickerDuration && e.isEdible()) { // only flicker those that were initially edible, otehrs aren't affected by powerup
-        flickerEffect(e);
-      }
-      else {
-        e.setEdibleStatus(false);
-        e.setColor(e.getDefaultColor());
-      }
-    }
-
-    //respawn pup
-    if(pup.isVisible() == false && (millis() - pup.getLastTimePickedUp()) / 1000 >= pup.getRespawnInterval()) {
-      pup.randomizePos();
-      pup.setVisibility(true);
-    }
-  }
-}
-
-
-void keyPressed() {
-  if (keyPressedList.indexOf(key) == -1) {
-    keyPressedList.add(key);
-  }
-}
-
-
-void keyReleased() {
-  if (keyPressedList.indexOf(key) != -1) {
-    keyPressedList.remove(keyPressedList.indexOf(key));
-  }
-}
-
-
-void drawPlayers() {
-  leftPlayer.display();
-  rightPlayer.display();
-}
-
-
-void drawEnemies() {
-  for(int i = 0; i < leftEnemyList.size(); i++) {
-    leftEnemyList.get(i).display();
-  }
-
-  for(int i = 0; i < rightEnemyList.size(); i++) {
-    rightEnemyList.get(i).display();
   }
 }
 
@@ -285,7 +153,6 @@ void handlePlayersInputs() {
       handleLeftPlayerInput(keyPressedList.get(i));
       handleRightPlayerInput(keyPressedList.get(i));
     }
-
   }
 }
 
@@ -319,6 +186,12 @@ void handleRightPlayerInput(Character keyChar) {
   else if (keyChar.equals('l')) {
     rightPlayer.setXpos(rightPlayer.getXpos() + rightPlayer.getSpeed());
   }
+}
+
+
+void drawPlayers() {
+  leftPlayer.display();
+  rightPlayer.display();
 }
 
 
@@ -370,17 +243,152 @@ void updateEnemiesPos(ArrayList<Enemy> enemyList) {
 }
 
 
-void initializeGame() {
-  leftEnemyList = new ArrayList<Enemy>();
-  rightEnemyList = new ArrayList<Enemy>();
+void drawEnemies() {
+  for(int i = 0; i < leftEnemyList.size(); i++) {
+    leftEnemyList.get(i).display();
+  }
 
-  initBoundaries();
-  initPlayers();
-  initEnemies();
-  initPowerUp();
+  for(int i = 0; i < rightEnemyList.size(); i++) {
+    rightEnemyList.get(i).display();
+  }
+}
 
-  gameStartTime = millis();
-  scoreTime = -1;
 
-  alive = true;
+void checkPlayerEnemyCollision(Player p, ArrayList<Enemy> enemyList) {
+  Enemy e;
+  for(int i = 0; i < enemyList.size(); i++) {
+    e = enemyList.get(i);
+    if(e.isNewEnemy() == false) { // new enemies cannot be collided in to until cooldown wears off
+      if (pCollideE(p, e)) {
+        if(e.isEdible()) {
+          enemyList.remove(enemyList.indexOf(e));
+        }
+        else {
+          alive = false;
+        }
+      }
+    }
+  }
+}
+
+
+boolean pCollideE(Player p_, Enemy e) {
+  float distX = abs(e.getXpos() - p_.getXpos());
+  float distY = abs(e.getYpos() - p_.getYpos());
+
+  if (distX > (p_.getSize() / 2.0) + (e.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
+  if (distY > (p_.getSize() / 2.0) + (e.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
+
+  if (distX <= (p_.getSize() / 2.0)) {
+    return true;
+  }
+  if (distY <= (p_.getSize() / 2.0)) {
+    return true;
+  }
+
+  float dx = distX - (p_.getSize() / 2.0);
+  float dy = distY - (p_.getSize() / 2.0);
+
+  return ((dx * dx) + (dy * dy)) <= (e.getSize() / 2.0) * (e.getSize() / 2.0);
+}
+
+
+boolean pCollidePup(Player p_, PowerUp pup_) { // no inherit zzz
+  float distX = abs(pup_.getXpos() - p_.getXpos());
+  float distY = abs(pup_.getYpos() - p_.getYpos());
+
+  if (distX > (p_.getSize() / 2.0) + (pup_.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
+  if (distY > (p_.getSize() / 2.0) + (pup_.getSize() / 2.0)) { return false; } // early check, if passes, can't possibly have collided
+
+  if (distX <= (p_.getSize() / 2.0)) {
+    return true;
+  }
+  if (distY <= (p_.getSize() / 2.0)) {
+    return true;
+  }
+
+  float dx = distX - (p_.getSize() / 2.0);
+  float dy = distY - (p_.getSize() / 2.0);
+
+  return ((dx * dx) + (dy * dy)) <= (pup_.getSize() / 2.0) * (pup_.getSize() / 2.0);
+}
+
+
+void drawPowerUp() {
+  leftPup.display();
+  rightPup.display();
+}
+
+
+void checkPlayerPowerUpCollision(Player p, ArrayList<Enemy> enemyList, PowerUp pup) {
+  final float flickerDuration = leftPup.getLengthOfEffect() + 2; // 2 seconds
+
+  //check for pup collision, if hit make enemies edible
+  if (pup.isVisible() && pCollidePup(p, pup)) {
+    pup.setVisibility(false);
+    pup.setLastTimePickedUp(millis());
+    Enemy e;
+    for(int i = 0; i < enemyList.size(); i++) {
+      e = enemyList.get(i);
+      if (e.isNewEnemy() == false) {
+        e.setEdibleStatus(true);
+        e.setColor(color(255, 255, 255, 100));
+        e.display();
+      }
+    }
+  }
+
+  // if last time picked up is -1 then it hasn't been picked up yet
+  else if(pup.getLastTimePickedUp() > -1 && (millis() - pup.getLastTimePickedUp()) / 1000 >= pup.getLengthOfEffect()) {
+    Enemy e;
+    for(int i = 0; i < enemyList.size(); i++) {
+      e = enemyList.get(i);
+      if ((millis() - pup.getLastTimePickedUp()) / 1000 < flickerDuration && e.isEdible()) { // only flicker those that were initially edible, otehrs aren't affected by powerup
+        flickerEffect(e);
+      }
+      else {
+        e.setEdibleStatus(false);
+        e.setColor(e.getDefaultColor());
+      }
+    }
+
+    //respawn pup
+    if(pup.isVisible() == false && (millis() - pup.getLastTimePickedUp()) / 1000 >= pup.getRespawnInterval()) {
+      pup.randomizePos();
+      pup.setVisibility(true);
+    }
+  }
+}
+
+
+void showGameOverScreen() {
+  float tWidth;
+  String restartPrompt = "Press 'r' to restart game";
+  if (scoreTime == -1) { // only caclulate it once until restarted
+    scoreTime = (millis() - gameStartTime) / 1000; //convert milliseconds to seconds
+  }
+
+  textSize(25);
+  stroke(255);
+  fill(255);
+  tWidth = textWidth(Float.toString(scoreTime)) / 2.0;
+  text(nf(scoreTime, 0, 2), (width / 2.0) - tWidth, height / 2.0);
+
+  tWidth = textWidth(restartPrompt) / 2.0;
+  //adding the textAscent() and textDescent() values will give you the total height of the line.
+  text(restartPrompt, (width / 2.0) - tWidth, height / 2.0 + textAscent() + textDescent());
+}
+
+
+void keyPressed() {
+  if (keyPressedList.indexOf(key) == -1) {
+    keyPressedList.add(key);
+  }
+}
+
+
+void keyReleased() {
+  if (keyPressedList.indexOf(key) != -1) {
+    keyPressedList.remove(keyPressedList.indexOf(key));
+  }
 }
