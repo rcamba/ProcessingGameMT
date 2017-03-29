@@ -1,20 +1,23 @@
 color bgColor = color(50, 50, 50);
 ArrayList<Character> keyPressedList;
-ArrayList<Enemy> leftEnemyList;
-ArrayList<Enemy> rightEnemyList;
+ArrayList<Enemy> leftEnemyList, rightEnemyList;
 
-Player leftPlayer;
-Player rightPlayer;
+Player leftPlayer, rightPlayer;
 float pSize = 20;
 float pSpeed = 4; // low speed causes boundary jutter/seizure like movement
 
-Boundary leftBoundary;
-Boundary rightBoundary;
+Boundary leftBoundary, rightBoundary;
 PowerUp leftPup, rightPup;
 
 float lastTimeEnemyAdded;
 float enemyAdditionInterval;
+boolean alive = true;
 
+float restartCooldown = 2;
+float lastTimeRestarted = -1;
+
+float gameStartTime;
+float scoreTime = -1;
 
 void setup() {
   size(400, 600);
@@ -91,27 +94,48 @@ void initBoundaries() {
 
 
 void draw() {
-  background(bgColor);
-  leftBoundary.display();
-  rightBoundary.display();
+  if (alive) {
+    background(bgColor);
+    leftBoundary.display();
+    rightBoundary.display();
 
-  handlePlayersInputs();
-  drawPlayers();
+    handlePlayersInputs();
+    drawPlayers();
 
-  checkToAddMoreEnemies();
-  newEnemyWarning(leftEnemyList);
-  newEnemyWarning(rightEnemyList);
+    checkToAddMoreEnemies();
+    newEnemyWarning(leftEnemyList);
+    newEnemyWarning(rightEnemyList);
 
-  updateEnemiesPos(leftEnemyList);
-  updateEnemiesPos(rightEnemyList);
-  drawEnemies();
+    updateEnemiesPos(leftEnemyList);
+    updateEnemiesPos(rightEnemyList);
+    drawEnemies();
 
-  checkPlayerEnemyCollision(leftPlayer, leftEnemyList);
-  checkPlayerEnemyCollision(rightPlayer, rightEnemyList);
+    checkPlayerEnemyCollision(leftPlayer, leftEnemyList);
+    checkPlayerEnemyCollision(rightPlayer, rightEnemyList);
 
-  drawPowerUp();
-  checkPlayerPowerUpCollision(leftPlayer, rightEnemyList, leftPup);  //left pup controls right enemies and vice versa
-  checkPlayerPowerUpCollision(rightPlayer, leftEnemyList, rightPup);
+    drawPowerUp();
+    checkPlayerPowerUpCollision(leftPlayer, rightEnemyList, leftPup);  //left pup controls right enemies and vice versa
+    checkPlayerPowerUpCollision(rightPlayer, leftEnemyList, rightPup);
+  }
+  else {
+    float tWidth;
+    String restartPrompt = "Press 'r' to restart game";
+    if (scoreTime == -1) { // only caclulate it once until restarted
+      scoreTime = (millis() - gameStartTime) / 1000; //convert milliseconds to seconds
+    }
+
+    textSize(25);
+    stroke(255);
+    fill(255);
+    tWidth = textWidth(Float.toString(scoreTime)) / 2.0;
+    text(nf(scoreTime, 0, 2), (width / 2.0) - tWidth, height / 2.0);
+
+    tWidth = textWidth(restartPrompt) / 2.0;
+    //adding the textAscent() and textDescent() values will give you the total height of the line.
+    text(restartPrompt, (width / 2.0) - tWidth, height / 2.0 + textAscent() + textDescent());
+
+    handlePlayersInputs();
+  }
 }
 
 
@@ -172,9 +196,7 @@ void checkPlayerEnemyCollision(Player p, ArrayList<Enemy> enemyList) {
           enemyList.remove(enemyList.indexOf(e));
         }
         else {
-          noLoop();
-          println("Hit");
-
+          alive = false;
         }
       }
     }
@@ -184,6 +206,7 @@ void checkPlayerEnemyCollision(Player p, ArrayList<Enemy> enemyList) {
 void checkPlayerPowerUpCollision(Player p, ArrayList<Enemy> enemyList, PowerUp pup) {
   final float flickerDuration = leftPup.getLengthOfEffect() + 2; // 2 seconds
 
+  //check for pup collision, if hit make enemies edible
   if (pup.isVisible() && pCollidePup(p, pup)) {
     pup.setVisibility(false);
     pup.setLastTimePickedUp(millis());
@@ -211,6 +234,8 @@ void checkPlayerPowerUpCollision(Player p, ArrayList<Enemy> enemyList, PowerUp p
         e.setColor(e.getDefaultColor());
       }
     }
+
+    //respawn pup
     if(pup.isVisible() == false && (millis() - pup.getLastTimePickedUp()) / 1000 >= pup.getRespawnInterval()) {
       pup.randomizePos();
       pup.setVisibility(true);
@@ -250,8 +275,6 @@ void drawEnemies() {
 }
 
 
-float restartCooldown = 2;
-float lastTimeRestarted = -1;
 void handlePlayersInputs() {
   for(int i = 0; i < keyPressedList.size(); i ++) {
     if(keyPressedList.get(i).equals('r') && (millis() - lastTimeRestarted) / 1000 >= restartCooldown) {
@@ -265,6 +288,7 @@ void handlePlayersInputs() {
 
   }
 }
+
 
 void handleLeftPlayerInput(Character keyChar) {
   if (keyChar.equals('w')) {
@@ -280,6 +304,7 @@ void handleLeftPlayerInput(Character keyChar) {
     leftPlayer.setXpos(leftPlayer.getXpos() + leftPlayer.getSpeed());
   }
 }
+
 
 void handleRightPlayerInput(Character keyChar) {
   if (keyChar.equals('i')) {
@@ -321,6 +346,7 @@ void newEnemyWarning(ArrayList<Enemy> enemyList) {
   }
 }
 
+
 void flickerEffect (Enemy e) {
    //flicker effect - swap fill color ever 2/100th of a second;
   color c = e.getDefaultColor();
@@ -343,6 +369,7 @@ void updateEnemiesPos(ArrayList<Enemy> enemyList) {
   }
 }
 
+
 void initializeGame() {
   leftEnemyList = new ArrayList<Enemy>();
   rightEnemyList = new ArrayList<Enemy>();
@@ -351,4 +378,9 @@ void initializeGame() {
   initPlayers();
   initEnemies();
   initPowerUp();
+
+  gameStartTime = millis();
+  scoreTime = -1;
+
+  alive = true;
 }
