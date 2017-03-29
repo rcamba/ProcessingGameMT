@@ -1,6 +1,6 @@
 class PowerUp {
   float xPos, yPos, radius;
-  color outlineColor = color(190, 150, 0);
+  color outlineColor = color(0, 0, 0);
   color fillColor = color(210, 80, 180, 150);
   boolean visibilityStatus = true;
   float lastTimePickedUp = -1;
@@ -16,6 +16,18 @@ class PowerUp {
     this.yPos = b.getHeight() / 2.0;
 
     this.radius = radius * 2;
+
+    updatePos(xPos, yPos); // keep the ball in bounds from random x/yPos
+  }
+
+  PowerUp(float xPos, float yPos, float radius, Boundary b, color c) {
+    this.b = b;
+
+    this.xPos = b.getWidth() / 2.0;
+    this.yPos = b.getHeight() / 2.0;
+
+    this.radius = radius * 2;
+    this.fillColor = c;
 
     updatePos(xPos, yPos); // keep the ball in bounds from random x/yPos
   }
