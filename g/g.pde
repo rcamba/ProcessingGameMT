@@ -23,13 +23,7 @@ void setup() {
 
   keyPressedList = new ArrayList<Character>();
 
-  leftEnemyList = new ArrayList<Enemy>();
-  rightEnemyList = new ArrayList<Enemy>();
-
-  initBoundaries();
-  initPlayers();
-  initEnemies();
-  initPowerUp();
+  initializeGame();
 }
 
 
@@ -39,7 +33,7 @@ void initPlayers() {
                              pSize, pSpeed, leftBoundary);
   rightPlayer = new Player(((rightBoundary.getStartX() + rightBoundary.getEndX()) / 2.0) - (pSize / 2.0),
                              rightBoundary.getEndY() * 0.90,
-                             pSize, pSpeed, rightBoundary, color(160, 85, 100));
+                             pSize, pSpeed, rightBoundary, color(160, 180, 100));
 }
 
 void initEnemies() {
@@ -180,6 +174,7 @@ void checkPlayerEnemyCollision(Player p, ArrayList<Enemy> enemyList) {
         else {
           noLoop();
           println("Hit");
+
         }
       }
     }
@@ -223,6 +218,7 @@ void checkPlayerPowerUpCollision(Player p, ArrayList<Enemy> enemyList, PowerUp p
   }
 }
 
+
 void keyPressed() {
   if (keyPressedList.indexOf(key) == -1) {
     keyPressedList.add(key);
@@ -254,10 +250,19 @@ void drawEnemies() {
 }
 
 
+float restartCooldown = 2;
+float lastTimeRestarted = -1;
 void handlePlayersInputs() {
   for(int i = 0; i < keyPressedList.size(); i ++) {
-    handleLeftPlayerInput(keyPressedList.get(i));
-    handleRightPlayerInput(keyPressedList.get(i));
+    if(keyPressedList.get(i).equals('r') && (millis() - lastTimeRestarted) / 1000 >= restartCooldown) {
+      lastTimeRestarted = millis();
+      initializeGame();
+    }
+    else {
+      handleLeftPlayerInput(keyPressedList.get(i));
+      handleRightPlayerInput(keyPressedList.get(i));
+    }
+
   }
 }
 
@@ -336,4 +341,14 @@ void updateEnemiesPos(ArrayList<Enemy> enemyList) {
       e.updatePos(e.getXpos() + e.getSpeedX(), e.getYpos() + e.getSpeedY());
     }
   }
+}
+
+void initializeGame() {
+  leftEnemyList = new ArrayList<Enemy>();
+  rightEnemyList = new ArrayList<Enemy>();
+
+  initBoundaries();
+  initPlayers();
+  initEnemies();
+  initPowerUp();
 }
