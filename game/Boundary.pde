@@ -1,7 +1,7 @@
 class Boundary {
     float startX,  endX,  startY,  endY;
     color outlineColor = color(200, 200, 0);
-    final static int outlineThickness = 3;
+    int outlineThickness = 3;
 
     Boundary(float startX, float endX, float startY, float endY){
       this.startX = startX;

@@ -51,13 +51,13 @@ void initBoundaries() {
   float lBoundaryStartX = 0;
   float lBoundaryEndX = (width / 2.0);
   float lBoundaryStartY = 0;
-  float lBoundaryEndY = height - (Boundary.outlineThickness / 2.0);
+  float lBoundaryEndY = height;
   leftBoundary = new Boundary(lBoundaryStartX, lBoundaryEndX, lBoundaryStartY, lBoundaryEndY);
 
   float rBoundaryStartX = lBoundaryEndX;
-  float rBoundaryEndX = width - Boundary.outlineThickness;
+  float rBoundaryEndX = width;
   float rBoundaryStartY = 0;
-  float rBoundaryEndY = height - (Boundary.outlineThickness / 2.0);
+  float rBoundaryEndY = height;
   rightBoundary = new Boundary(rBoundaryStartX, rBoundaryEndX, rBoundaryStartY, rBoundaryEndY);
 }
 
@@ -144,6 +144,7 @@ void draw() {
 
     handlePlayersInputs();
   }
+
 }
 
 
