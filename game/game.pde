@@ -214,7 +214,7 @@ void newEnemyWarning(ArrayList<Enemy> enemyList) {
     e = enemyList.get(i);
 
     if (e.isNewEnemy() && (millis() - lastTimeEnemyAdded) / 1000 <= newEnemyCoolDownTime) {
-      flickerEffect(e);
+      flickerEffect(e, e.getDefaultColor());
     }
     else if (e.isNewEnemy()) {
       e.setNewEnemyStatus(false);
@@ -224,14 +224,14 @@ void newEnemyWarning(ArrayList<Enemy> enemyList) {
 }
 
 
-void flickerEffect (Enemy e) {
+void flickerEffect (Enemy e, color flickerBaseColor) {
    //flicker effect - swap fill color ever 2/100th of a second;
-  color c = e.getDefaultColor();
+
   if((round(millis() - lastTimeEnemyAdded) / 100) % 2 == 0) {
-    e.setColor(color(red(c), green(c), blue(c), alpha(c) + 200));
+    e.setColor(color(red(flickerBaseColor), green(flickerBaseColor), blue(flickerBaseColor), alpha(flickerBaseColor) + 200));
   }
   else {
-    e.setColor(color(red(c), green(c), blue(c), alpha(c) - 200));
+    e.setColor(color(red(flickerBaseColor), green(flickerBaseColor), blue(flickerBaseColor), alpha(flickerBaseColor) - 200));
   }
 }
 
@@ -336,7 +336,7 @@ void checkPlayerPowerUpCollision(Player p, ArrayList<Enemy> enemyList, PowerUp p
       e = enemyList.get(i);
       if (e.isNewEnemy() == false) {
         e.setEdibleStatus(true);
-        e.setColor(color(255, 255, 255, 100));
+        e.setColor(e.getEdibleColor());
         e.display();
       }
     }
@@ -348,7 +348,7 @@ void checkPlayerPowerUpCollision(Player p, ArrayList<Enemy> enemyList, PowerUp p
     for(int i = 0; i < enemyList.size(); i++) {
       e = enemyList.get(i);
       if ((millis() - pup.getLastTimePickedUp()) / 1000 < flickerDuration && e.isEdible()) { // only flicker those that were initially edible, otehrs aren't affected by powerup
-        flickerEffect(e);
+        flickerEffect(e, e.getEdibleColor());
       }
       else {
         e.setEdibleStatus(false);

@@ -3,6 +3,7 @@ class Enemy {
   color outlineColor = color(150, 0, 150);
   color defaultColor =  color(0, 0, 50, 50);
   color fillColor = defaultColor;
+  color edibleColor = color(255, 255, 255, 100);
   boolean newEnemyStatus = true;
   boolean edibleStatus = false;
   Boundary b;
@@ -128,6 +129,10 @@ class Enemy {
 
   boolean isEdible() {
     return edibleStatus;
+  }
+
+  color getEdibleColor() {
+    return edibleColor;
   }
 
 }
