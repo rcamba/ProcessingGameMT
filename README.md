@@ -1,3 +1,8 @@
+Setup:
+------
+`git clone https://github.com/rcamba/ProcessingGameMT`  
+Open **game.pde** in [Processing](https://processing.org/download/) and then run it  
+
 Instructions:
 -------------
 Survive as long as possible.  
